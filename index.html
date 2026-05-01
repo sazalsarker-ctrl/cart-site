@@ -96,7 +96,7 @@ input {
 </div>
 
 <div class="product">
-  <img src="https://obak.com.bd/wp-content/uploads/2024/10/misti-kumra-fali.jpg.jpg">
+  <img src="https://obak.com.bd/wp-content/uploads/2024/10/misti-kumra-fali.jpg">
   <h4>মিষ্টি কুমড়া</h4>
   <p>৳115 / কেজি</p>
   <button onclick="addToCart('মিষ্টি কুমড়া',115)">Add</button>
@@ -113,21 +113,21 @@ input {
   <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-UMlCNwgqHHrboLxQ5LJ5cFvPeMEtbvSaiw&s.jpg">
   <h4>করলা</h4>
   <p>৳70 / কেজি</p>
-  <button onclick="addToCart('ঢেঁড়স',50)">Add</button>
+  <button onclick="addToCart('করলা',50)">Add</button>
 </div>
 
 <div class="product">
-  <img src="https://www.protidinersangbad.com/cache-images/news_photos/2023/08/28/resize-350x300x1x0-image-413434.jpg.jpg">
-  <h4>লাউশাক</h4>
+  <img src="https://www.protidinersangbad.com/cache-images/news_photos/2023/08/28/resize-350x300x1x0-image-413434.jpg">
+  <h4>লাউ শাক</h4>
   <p>৳30 / আটি</p>
-  <button onclick="addToCart('ঢেঁড়স',50)">Add</button>
+  <button onclick="addToCart('লাউ শাক',50)">Add</button>
 </div>
 
 <div class="product">
   <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2UK3Y3NphvUvbVwb0zAsSE9PUq3N0DF8UTA&s.jpg">
   <h4>কলমি শাক</h4>
   <p>৳70 /  আটি</p>
-  <button onclick="addToCart('ঢেঁড়স',50)">Add</button>
+  <button onclick="addToCart('কলমি শাক',50)">Add</button>
 </div>
 
 <!-- CART BUTTON -->
@@ -146,9 +146,16 @@ Cart (<span id="count">0</span>)
 
   <input placeholder="Customer Name" id="name">
   <input placeholder="Phone" id="phone">
+  <input placeholder="Branch Name" id="branch">
 
-  <!-- 🔥 Branch Input -->
-  <input placeholder="Branch Name (টাইপ করুন)" id="branch">
+  <select id="payment">
+    <option value="">Payment Method</option>
+    <option>bKash</option>
+    <option>Nagad</option>
+    <option>Cash on Delivery</option>
+  </select>
+
+  <input placeholder="Transaction ID (if paid)" id="trxid">
 
   <h4>Total: ৳<span id="total">0</span></h4>
 
@@ -175,10 +182,9 @@ function addToCart(name, price){
   let itemTotal = price * kg;
 
   cart.push({
-    name: name,
-    price: price,
-    kg: kg,
-    total: itemTotal
+    name:name,
+    kg:kg,
+    total:itemTotal
   });
 
   total += itemTotal;
@@ -205,7 +211,6 @@ function renderCart(){
 }
 
 function removeItem(index){
-
   total -= cart[index].total;
   cart.splice(index,1);
 
@@ -226,19 +231,26 @@ function confirmOrder(){
   let name = document.getElementById("name").value;
   let phone = document.getElementById("phone").value;
   let branch = document.getElementById("branch").value;
+  let payment = document.getElementById("payment").value;
+  let trxid = document.getElementById("trxid").value;
 
-  if(!name || !phone || !branch){
+  if(!name || !phone || !branch || !payment){
     alert("সব তথ্য পূরণ করুন");
     return;
   }
 
-  let orderText = "Order:\n";
+  let orderText = "ORDER SUMMARY\n\n";
 
   cart.forEach(i => {
     orderText += `${i.name} - ${i.kg}kg - ৳${i.total}\n`;
   });
 
-  orderText += `Branch: ${branch}\nTotal: ৳${total}`;
+  orderText += `
+Branch: ${branch}
+Payment: ${payment}
+TrxID: ${trxid}
+TOTAL: ৳${total}
+`;
 
   alert(orderText);
 

@@ -2,10 +2,14 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Cart System</title>
+<title>Agro Cart System</title>
 
 <style>
-body {font-family: Arial; margin:20px;}
+body {
+  font-family: Arial;
+  margin:20px;
+  background:#f4f4f4;
+}
 
 .product {
   border:1px solid #ddd;
@@ -13,11 +17,24 @@ body {font-family: Arial; margin:20px;}
   width:200px;
   display:inline-block;
   margin:10px;
+  background:white;
+  border-radius:8px;
+}
+
+.product img {
+  width:100%;
+  height:140px;
+  object-fit:cover;
+  border-radius:5px;
 }
 
 button {
-  padding:5px 10px;
+  padding:6px 10px;
   cursor:pointer;
+  background:#28a745;
+  color:white;
+  border:none;
+  border-radius:5px;
 }
 
 #cartBtn {
@@ -25,8 +42,9 @@ button {
   bottom:20px;
   right:20px;
   background:orange;
-  padding:10px;
+  padding:12px;
   border:none;
+  border-radius:50px;
 }
 
 #cartModal {
@@ -37,37 +55,88 @@ button {
   transform:translate(-50%,-50%);
   background:white;
   padding:20px;
-  width:300px;
+  width:350px;
   border-radius:10px;
-  box-shadow:0 0 10px rgba(0,0,0,0.3);
+  box-shadow:0 0 15px rgba(0,0,0,0.3);
 }
 
-input, select {
+input {
   width:100%;
   margin:5px 0;
-  padding:5px;
+  padding:6px;
 }
 
+.item {
+  display:flex;
+  justify-content:space-between;
+  margin:5px 0;
+  border-bottom:1px solid #eee;
+  padding-bottom:5px;
+}
+
+.deleteBtn {
+  background:red;
+  padding:3px 6px;
+  font-size:12px;
+}
 </style>
 </head>
 
 <body>
 
-<h2>Products</h2>
+<h2>🛒 Agro Products</h2>
+
+<!-- PRODUCTS -->
 
 <div class="product">
-  <h4>কুমড়া</h4>
-  <p>৳115</p>
-  <button onclick="addToCart('কুমড়া',115)">Add</button>
+  <img src="https://www.halalagro.farm/cdn/shop/collections/Dhundul-halal_agro_farm.jpg?v=1668453150.jpg">
+  <h4>ধুন্দুল</h4>
+  <p>৳80 / কেজি</p>
+  <button onclick="addToCart('ধুন্দুল',80)">Add</button>
 </div>
 
 <div class="product">
+  <img src="https://obak.com.bd/wp-content/uploads/2024/10/misti-kumra-fali.jpg.jpg">
+  <h4>মিষ্টি কুমড়া</h4>
+  <p>৳115 / কেজি</p>
+  <button onclick="addToCart('মিষ্টি কুমড়া',115)">Add</button>
+</div>
+
+<div class="product">
+  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQtU5kg4ayq5c0JRvwRH2pQFLor6EMYhK__uQ&s.jpg">
   <h4>ঢেঁড়স</h4>
-  <p>৳80</p>
-  <button onclick="addToCart('ঢেঁড়স',80)">Add</button>
+  <p>৳50 / কেজি</p>
+  <button onclick="addToCart('ঢেঁড়স',50)">Add</button>
 </div>
 
-<button id="cartBtn" onclick="openCart()">Cart (<span id="count">0</span>)</button>
+<div class="product">
+  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-UMlCNwgqHHrboLxQ5LJ5cFvPeMEtbvSaiw&s.jpg">
+  <h4>করলা</h4>
+  <p>৳70 / কেজি</p>
+  <button onclick="addToCart('ঢেঁড়স',50)">Add</button>
+</div>
+
+<div class="product">
+  <img src="https://www.protidinersangbad.com/cache-images/news_photos/2023/08/28/resize-350x300x1x0-image-413434.jpg.jpg">
+  <h4>লাউশাক</h4>
+  <p>৳30 / আটি</p>
+  <button onclick="addToCart('ঢেঁড়স',50)">Add</button>
+</div>
+
+<div class="product">
+  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2UK3Y3NphvUvbVwb0zAsSE9PUq3N0DF8UTA&s.jpg">
+  <h4>কলমি শাক</h4>
+  <p>৳70 /  আটি</p>
+  <button onclick="addToCart('ঢেঁড়স',50)">Add</button>
+</div>
+
+<!-- CART BUTTON -->
+
+<button id="cartBtn" onclick="openCart()">
+Cart (<span id="count">0</span>)
+</button>
+
+<!-- CART MODAL -->
 
 <div id="cartModal">
   <h3>Your Cart</h3>
@@ -78,14 +147,9 @@ input, select {
   <input placeholder="Customer Name" id="name">
   <input placeholder="Phone" id="phone">
 
-  <select id="location">
-    <option>Dhaka</option>
-    <option>Chittagong</option>
-  </select>
+  <!-- 🔥 Branch Input -->
+  <input placeholder="Branch Name (টাইপ করুন)" id="branch">
 
-  <input placeholder="Payment (Bkash/Nagad)" id="payment">
-
-  <p>Bag Charge: ৳10</p>
   <h4>Total: ৳<span id="total">0</span></h4>
 
   <button onclick="confirmOrder()">Confirm Order</button>
@@ -98,22 +162,55 @@ let cart = [];
 let total = 0;
 
 function addToCart(name, price){
-  cart.push({name, price});
-  total += price;
+
+  let kg = prompt("কত কেজি নিতে চান?");
+
+  if(!kg || isNaN(kg)){
+    alert("সঠিক কেজি লিখুন");
+    return;
+  }
+
+  kg = parseFloat(kg);
+
+  let itemTotal = price * kg;
+
+  cart.push({
+    name: name,
+    price: price,
+    kg: kg,
+    total: itemTotal
+  });
+
+  total += itemTotal;
 
   document.getElementById("count").innerText = cart.length;
-
   renderCart();
 }
 
 function renderCart(){
+
   let html = "";
-  cart.forEach(item => {
-    html += item.name + " - ৳" + item.price + "<br>";
+
+  cart.forEach((item, index) => {
+    html += `
+    <div class="item">
+      <span>${item.name} (${item.kg}kg) - ৳${item.total}</span>
+      <button class="deleteBtn" onclick="removeItem(${index})">X</button>
+    </div>
+    `;
   });
 
   document.getElementById("items").innerHTML = html;
-  document.getElementById("total").innerText = total + 10;
+  document.getElementById("total").innerText = total;
+}
+
+function removeItem(index){
+
+  total -= cart[index].total;
+  cart.splice(index,1);
+
+  document.getElementById("count").innerText = cart.length;
+  renderCart();
 }
 
 function openCart(){
@@ -125,29 +222,34 @@ function closeCart(){
 }
 
 function confirmOrder(){
+
   let name = document.getElementById("name").value;
   let phone = document.getElementById("phone").value;
+  let branch = document.getElementById("branch").value;
 
-  if(!name || !phone){
-    alert("Fill all info");
+  if(!name || !phone || !branch){
+    alert("সব তথ্য পূরণ করুন");
     return;
   }
 
   let orderText = "Order:\n";
 
   cart.forEach(i => {
-    orderText += i.name + " - " + i.price + "\n";
+    orderText += `${i.name} - ${i.kg}kg - ৳${i.total}\n`;
   });
 
-  orderText += "Total: " + (total+10);
+  orderText += `Branch: ${branch}\nTotal: ৳${total}`;
 
   alert(orderText);
 
-  // Reset
+  // reset
   cart = [];
   total = 0;
-  renderCart();
+
+  document.getElementById("items").innerHTML = "";
+  document.getElementById("total").innerText = 0;
   document.getElementById("count").innerText = 0;
+
   closeCart();
 }
 

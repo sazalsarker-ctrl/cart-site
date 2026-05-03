@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Agro Cart System</title>
+
+<style>
+body {
+  font-family: Arial;
+  margin:20px;
+  background:#f4f4f4;
+}
+
+.product {
+  border:1px solid #ddd;
+  padding:10px;
+  width:200px;
+  display:inline-block;
+  margin:10px;
+  background:white;
+  border-radius:8px;
+}
+
+.product img {
+  width:100%;
+  height:140px;
+  object-fit:cover;
+  border-radius:5px;
+}
+
+button {
+  padding:6px 10px;
+  cursor:pointer;
+  background:#28a745;
+  color:white;
+  border:none;
+  border-radius:5px;
+}
+
+#cartBtn {
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:orange;
+  padding:12px;
+  border:none;
+  border-radius:50px;
+}
+
+#cartModal {
+  display:none;
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:white;
+  padding:20px;
+  width:360px;
+  border-radius:10px;
+  box-shadow:0 0 15px rgba(0,0,0,0.3);
+}
+
+input, select {
+  width:100%;
+  margin:5px 0;
+  padding:6px;
+}
+
+.item {
+  display:flex;
+  justify-content:space-between;
+  margin:5px 0;
+  border-bottom:1px solid #eee;
+  padding-bottom:5px;
+}
+
+.deleteBtn {
+  background:red;
+  padding:3px 6px;
+  font-size:12px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>BURO Jsr-AgroBazar</h1>
+
+<div class="header">
+  <h2>🛒 Agro Products</h2>
+
+  <div class="ticker">
+    <span>☢️ কীটনাশক মুক্ত নিরাপদ কৃষি পণ্য ! 🚜🌾👨‍🌾</span>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+
+<div id="productList"></div>
+ 
+
+
+<!-- CART BUTTON -->
+
+<button id="cartBtn" onclick="openCart()">
+Cart (<span id="count">0</span>)
+</button>
+
+<!-- CART MODAL -->
+
+<div id="cartModal">
+  <h3>Your Cart</h3>
+  <div id="items"></div>
+
+  <hr>
+
+  <input placeholder="Customer Name" id="name">
+  <input placeholder="Phone" id="phone">
+  <input placeholder="Branch Name" id="branch">
+  <input placeholder="Wallet Number" id="wallet">
+
+  <select id="payment">
+    <option value="">Payment Method</option>
+    <option>bKash</option>
+    <option>Nagad</option>
+    <option>Cash on Delivery</option>
+  </select>
+
+  <input placeholder="Transaction ID" id="trxid">
+
+  <h4>Total: ৳<span id="total">0</span></h4>
+
+  <button onclick="confirmOrder()">Confirm Order</button>
+  <button onclick="closeCart()">Close</button>
+</div>
+
+<script>
+
+let cart = [];
+let total = 0;
+
+let products = [];
+let api = "https://script.google.com/macros/s/AKfycbzb8SeJorO47B2pHE4GePkxcWDJBy7G_xl1UFmZWizEYqxF1IZX9hrWB26JDwlJSlSZ/exec";
+
+fetch(api)
+  .then(res => res.json())
+  .then(data => {
+    products = data;
+    renderProducts();
+  });
+
+function renderProducts(){
+
+  let html = "";
+
+  products.forEach(p => {
+
+    html += `
+    <div class="product">
+      <img src="${p.image}">
+      <h4>${p.name}</h4>
+      <p>৳${p.price}</p>
+      <p>Stock: ${p.stock}</p>
+      <button onclick="addToCart('${p.name}', ${p.price}, ${p.stock})">
+        Add to Cart
+      </button>
+    </div>
+    `;
+  });
+
+  document.getElementById("productList").innerHTML = html;
+}
+
+/* ADD TO CART */
+function addToCart(name, price, stock){
+
+  let kg = prompt("কত পরিমাণ নিতে চান?");
+
+  if(!kg || isNaN(kg)){
+    alert("সঠিক পরিমাণ লিখুন");
+    return;
+  }
+
+  kg = parseFloat(kg);
+
+  if(kg > stock){
+    alert("স্টক নেই!");
+    return;
+  }
+
+  let itemTotal = price * kg;
+
+  cart.push({
+    name,
+    kg,
+    total: itemTotal
+  });
+
+  total += itemTotal;
+
+  document.getElementById("count").innerText = cart.length;
+  renderCart();
+}
+
+/* SHOW CART */
+function renderCart(){
+
+  let html = "";
+
+  cart.forEach((item, index) => {
+    html += `
+    <div class="item">
+      <span>${item.name} (${item.kg}kg) - ৳${item.total}</span>
+      <button class="deleteBtn" onclick="removeItem(${index})">X</button>
+    </div>
+    `;
+  });
+
+  document.getElementById("items").innerHTML = html;
+  document.getElementById("total").innerText = total;
+}
+
+/* REMOVE ITEM */
+function removeItem(index){
+  total -= cart[index].total;
+  cart.splice(index,1);
+
+  document.getElementById("count").innerText = cart.length;
+  renderCart();
+}
+
+/* OPEN / CLOSE CART */
+function openCart(){
+  document.getElementById("cartModal").style.display = "block";
+}
+
+function closeCart(){
+  document.getElementById("cartModal").style.display = "none";
+}
+
+/* SEND TO GOOGLE SHEET */
+function sendToServer(data){
+
+  let url = "https://script.google.com/macros/s/AKfycbxwG6fBxSKjdxLQfeD6LU7SdJoCHQ2P4uABMS6e-b-5_6hYKpARS0l7sPUnPCBWf-LSzQ/exec";
+
+  return fetch(url, {   // 👈 return দিতে হবে
+    method: "POST",
+    body: JSON.stringify(data)
+  });
+}
+
+/* CONFIRM ORDER */
+function confirmOrder(){
+console.log("Confirm clicked");
+
+  let name = document.getElementById("name").value;
+  let phone = document.getElementById("phone").value;
+  let branch = document.getElementById("branch").value;
+  let payment = document.getElementById("payment").value;
+  let wallet = document.getElementById("wallet").value;
+  let trxid = document.getElementById("trxid").value;
+
+  if(!name || !phone || !branch || !payment){
+    alert("সব তথ্য পূরণ করুন");
+    return;
+  }
+
+  let itemsText = "";
+
+  cart.forEach(i => {
+    itemsText += `${i.name} - ${i.kg}kg - ৳${i.total}\n`;
+  });
+
+  let orderText =
+`🛒 NEW ORDER
+
+👤 ${name}
+📞 ${phone}
+🏪 ${branch}
+
+📦 Items:
+${itemsText}
+
+💰 Total: ৳${total}
+
+💳 ${payment}
+🔢 ${trxid}
+`;
+
+  alert(orderText);
+
+  sendToServer({
+  name,
+  phone,
+  branch,
+  payment,
+  wallet,
+  trxid,
+  total,
+  cart
+})
+.then(() => {
+
+  alert("🎉 Order Successfully Placed!");
+
+ // reload products AFTER update
+  fetch(api + "?t=" + new Date().getTime())
+    .then(res => res.json())
+    .then(data => {
+      products = data;
+      renderProducts();
+    });
+
+});
+
+  // RESET
+  cart = [];
+  total = 0;
+
+  document.getElementById("items").innerHTML = "";
+  document.getElementById("total").innerText = 0;
+  document.getElementById("count").innerText = 0;
+
+  closeCart();
+
+fetch(api + "?t=" + new Date().getTime())
+  .then(res => res.json())
+  .then(data => {
+    products = data;
+    renderProducts();
+  });
+}
+</script>
+
+</body>
+</html>

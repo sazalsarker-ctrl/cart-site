@@ -55,12 +55,12 @@ button {
   transform:translate(-50%,-50%);
   background:white;
   padding:20px;
-  width:350px;
+  width:360px;
   border-radius:10px;
   box-shadow:0 0 15px rgba(0,0,0,0.3);
 }
 
-input {
+input, select {
   width:100%;
   margin:5px 0;
   padding:6px;
@@ -84,51 +84,21 @@ input {
 
 <body>
 
-<h2>🛒 Agro Products</h2>
+<h2>BURO Jsr-AgroBazar</h1>
+
+<div class="header">
+  <h2>🛒 Agro Products</h2>
+
+  <div class="ticker">
+    <span>☢️ কীটনাশক মুক্ত নিরাপদ কৃষি পণ্য ! 🚜🌾👨‍🌾</span>
+  </div>
+</div>
 
 <!-- PRODUCTS -->
 
-<div class="product">
-  <img src="https://www.halalagro.farm/cdn/shop/collections/Dhundul-halal_agro_farm.jpg?v=1668453150.jpg">
-  <h4>ধুন্দুল</h4>
-  <p>৳80 / কেজি</p>
-  <button onclick="addToCart('ধুন্দুল',80)">Add</button>
-</div>
+<div id="productList"></div>
+ 
 
-<div class="product">
-  <img src="https://obak.com.bd/wp-content/uploads/2024/10/misti-kumra-fali.jpg">
-  <h4>মিষ্টি কুমড়া</h4>
-  <p>৳115 / কেজি</p>
-  <button onclick="addToCart('মিষ্টি কুমড়া',115)">Add</button>
-</div>
-
-<div class="product">
-  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQtU5kg4ayq5c0JRvwRH2pQFLor6EMYhK__uQ&s.jpg">
-  <h4>ঢেঁড়স</h4>
-  <p>৳50 / কেজি</p>
-  <button onclick="addToCart('ঢেঁড়স',50)">Add</button>
-</div>
-
-<div class="product">
-  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-UMlCNwgqHHrboLxQ5LJ5cFvPeMEtbvSaiw&s.jpg">
-  <h4>করলা</h4>
-  <p>৳70 / কেজি</p>
-  <button onclick="addToCart('করলা',50)">Add</button>
-</div>
-
-<div class="product">
-  <img src="https://www.protidinersangbad.com/cache-images/news_photos/2023/08/28/resize-350x300x1x0-image-413434.jpg">
-  <h4>লাউ শাক</h4>
-  <p>৳30 / আটি</p>
-  <button onclick="addToCart('লাউ শাক',50)">Add</button>
-</div>
-
-<div class="product">
-  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2UK3Y3NphvUvbVwb0zAsSE9PUq3N0DF8UTA&s.jpg">
-  <h4>কলমি শাক</h4>
-  <p>৳70 /  আটি</p>
-  <button onclick="addToCart('কলমি শাক',50)">Add</button>
-</div>
 
 <!-- CART BUTTON -->
 
@@ -147,6 +117,7 @@ Cart (<span id="count">0</span>)
   <input placeholder="Customer Name" id="name">
   <input placeholder="Phone" id="phone">
   <input placeholder="Branch Name" id="branch">
+  <input placeholder="Wallet Number" id="wallet">
 
   <select id="payment">
     <option value="">Payment Method</option>
@@ -155,7 +126,7 @@ Cart (<span id="count">0</span>)
     <option>Cash on Delivery</option>
   </select>
 
-  <input placeholder="Transaction ID (if paid)" id="trxid">
+  <input placeholder="Transaction ID" id="trxid">
 
   <h4>Total: ৳<span id="total">0</span></h4>
 
@@ -168,23 +139,61 @@ Cart (<span id="count">0</span>)
 let cart = [];
 let total = 0;
 
-function addToCart(name, price){
+let products = [];
+let api = "https://script.google.com/macros/s/AKfycbzb8SeJorO47B2pHE4GePkxcWDJBy7G_xl1UFmZWizEYqxF1IZX9hrWB26JDwlJSlSZ/exec";
 
-  let kg = prompt("কত কেজি নিতে চান?");
+fetch(api)
+  .then(res => res.json())
+  .then(data => {
+    products = data;
+    renderProducts();
+  });
+
+function renderProducts(){
+
+  let html = "";
+
+  products.forEach(p => {
+
+    html += `
+    <div class="product">
+      <img src="${p.image}">
+      <h4>${p.name}</h4>
+      <p>৳${p.price}</p>
+      <p>Stock: ${p.stock}</p>
+      <button onclick="addToCart('${p.name}', ${p.price}, ${p.stock})">
+        Add to Cart
+      </button>
+    </div>
+    `;
+  });
+
+  document.getElementById("productList").innerHTML = html;
+}
+
+/* ADD TO CART */
+function addToCart(name, price, stock){
+
+  let kg = prompt("কত পরিমাণ নিতে চান?");
 
   if(!kg || isNaN(kg)){
-    alert("সঠিক কেজি লিখুন");
+    alert("সঠিক পরিমাণ লিখুন");
     return;
   }
 
   kg = parseFloat(kg);
 
+  if(kg > stock){
+    alert("স্টক নেই!");
+    return;
+  }
+
   let itemTotal = price * kg;
 
   cart.push({
-    name:name,
-    kg:kg,
-    total:itemTotal
+    name,
+    kg,
+    total: itemTotal
   });
 
   total += itemTotal;
@@ -193,6 +202,7 @@ function addToCart(name, price){
   renderCart();
 }
 
+/* SHOW CART */
 function renderCart(){
 
   let html = "";
@@ -210,6 +220,7 @@ function renderCart(){
   document.getElementById("total").innerText = total;
 }
 
+/* REMOVE ITEM */
 function removeItem(index){
   total -= cart[index].total;
   cart.splice(index,1);
@@ -218,6 +229,7 @@ function removeItem(index){
   renderCart();
 }
 
+/* OPEN / CLOSE CART */
 function openCart(){
   document.getElementById("cartModal").style.display = "block";
 }
@@ -226,12 +238,26 @@ function closeCart(){
   document.getElementById("cartModal").style.display = "none";
 }
 
+/* SEND TO GOOGLE SHEET */
+function sendToServer(data){
+
+  let url = "https://script.google.com/macros/s/AKfycbxwG6fBxSKjdxLQfeD6LU7SdJoCHQ2P4uABMS6e-b-5_6hYKpARS0l7sPUnPCBWf-LSzQ/exec";
+
+  return fetch(url, {   // 👈 return দিতে হবে
+    method: "POST",
+    body: JSON.stringify(data)
+  });
+}
+
+/* CONFIRM ORDER */
 function confirmOrder(){
+console.log("Confirm clicked");
 
   let name = document.getElementById("name").value;
   let phone = document.getElementById("phone").value;
   let branch = document.getElementById("branch").value;
   let payment = document.getElementById("payment").value;
+  let wallet = document.getElementById("wallet").value;
   let trxid = document.getElementById("trxid").value;
 
   if(!name || !phone || !branch || !payment){
@@ -239,22 +265,55 @@ function confirmOrder(){
     return;
   }
 
-  let orderText = "ORDER SUMMARY\n\n";
+  let itemsText = "";
 
   cart.forEach(i => {
-    orderText += `${i.name} - ${i.kg}kg - ৳${i.total}\n`;
+    itemsText += `${i.name} - ${i.kg}kg - ৳${i.total}\n`;
   });
 
-  orderText += `
-Branch: ${branch}
-Payment: ${payment}
-TrxID: ${trxid}
-TOTAL: ৳${total}
+  let orderText =
+`🛒 NEW ORDER
+
+👤 ${name}
+📞 ${phone}
+🏪 ${branch}
+
+📦 Items:
+${itemsText}
+
+💰 Total: ৳${total}
+
+💳 ${payment}
+🔢 ${trxid}
 `;
 
   alert(orderText);
 
-  // reset
+  sendToServer({
+  name,
+  phone,
+  branch,
+  payment,
+  wallet,
+  trxid,
+  total,
+  cart
+})
+.then(() => {
+
+  alert("🎉 Order Successfully Placed!");
+
+ // reload products AFTER update
+  fetch(api + "?t=" + new Date().getTime())
+    .then(res => res.json())
+    .then(data => {
+      products = data;
+      renderProducts();
+    });
+
+});
+
+  // RESET
   cart = [];
   total = 0;
 
@@ -263,8 +322,14 @@ TOTAL: ৳${total}
   document.getElementById("count").innerText = 0;
 
   closeCart();
-}
 
+fetch(api + "?t=" + new Date().getTime())
+  .then(res => res.json())
+  .then(data => {
+    products = data;
+    renderProducts();
+  });
+}
 </script>
 
 </body>
